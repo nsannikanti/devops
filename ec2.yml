@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  MyKeyPair:
+
+  MySecurityGroup:
+  
+  MyEC2Instance: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: "ami-0287a05f0ef0e9d9a"
+      KeyName: "jenkins"
+      InstanceType: "t2.micro"
+      SecurityGroupIds: 
+        - "sg-0e5d156c2dfe5cbc6"
+      SubnetId: "subnet-07330b3bd0b6b6298"
