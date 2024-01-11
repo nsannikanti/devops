@@ -1,17 +1,68 @@
 AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::LanguageExtensions
+Parameters:
+  myVPC:
+    Type: String
+    Default: "vpc-0423c79ebc9b2fb1a"
+    Description: Enter vpc id
+  InstanceList:
+    Type: CommaDelimitedList
+    Default: "instance1,instance2"
+  instanceType:
+    Type: String
+    Default: "t2.micro"
+    AllowedValues: ["t2.micro","t2.small","t2.medium"]
+Mappings: 
+  RegionMap: 
+    us-south-1: 
+      HVM64: "ami-0287a05f0ef0e9d9a"
+      HVMG2: "ami-0287a05f0ef0e9d9a"
 Resources:
+  Fn::ForEach::Instances:
+    - InstanceLogicalId
+    - !Ref InstanceList
+    - ${InstanceLogicalId}:
+        Type: AWS::EC2::Instance
+        Properties:
+          ImageId: !FindInMap
+            - RegionMap
+            - !Ref 'AWS::Region'
+            - HVM64
+          InstanceType: !Ref instanceType
+          KeyName: !Ref jenkins
+          SecurityGroupIds: 
+            - !Ref InstanceSecurityGroup
+          SubnetId: "subnet-07330b3bd0b6b6298"
   MyKeyPair:
     Type: 'AWS::EC2::KeyPair'
     Properties:
       KeyName: "jenkins"
-  # MySecurityGroup:
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http to client host
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
   
   MyEC2Instance: 
     Type: AWS::EC2::Instance
     Properties: 
       ImageId: "ami-0287a05f0ef0e9d9a"
-      KeyName: "jenkins"
+      KeyName: !Ref jenkins
       InstanceType: "t2.micro"
       SecurityGroupIds: 
-        - "sg-0e5d156c2dfe5cbc6"
+        - !Ref InstanceSecurityGroup
       SubnetId: "subnet-07330b3bd0b6b6298"
